@@ -1,0 +1,38 @@
+{
+  "name": "maptalks-regl",
+  "version": "1.0.0",
+  "author": "sakitam-fdd <smilefdd@gmail.com>",
+  "homepage": "https://github.com/sakitam-gis/simple-terrain-viz",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/maptalks-deckgl.js",
+  "module": "dist/maptalks-deckgl.esm.js",
+  "unpkg": "dist/maptalks-deckgl.js",
+  "commonjs": "dist/maptalks-deckgl.cjs.js",
+  "typings": "dist/types/index.d.ts",
+  "namespace": "DeckGLLayer",
+  "scripts": {
+    "tsc": "tsc --project tsconfig.json --declaration --declarationDir dist/types",
+    "dev": "cross-env yarn-or-npm bili --watch --env.NODE_ENV production",
+    "build": "cross-env yarn-or-npm bili --env.NODE_ENV production",
+    "docs": "typedoc --out docs/api --theme minimal --mode file",
+    "test": "jest"
+  },
+  "bugs": {
+    "url": "https://github.com/sakitam-gis/simple-terrain-viz/issues"
+  },
+  "keywords": [
+    "regl",
+    "maptalks"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:sakitam-gis/simple-terrain-viz.git",
+    "directory": "packages/maptalks-regl"
+  },
+  "devDependencies": {
+    "maptalks": "^0.49.1"
+  }
+}

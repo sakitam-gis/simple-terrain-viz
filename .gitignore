@@ -1,0 +1,22 @@
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
+# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+.nyc_output
+.DS_Store
+
+.idea/
+.vscode/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.npm
+# Yarn Integrity file
+.yarn-integrity
+# dotenv environment variables file
+.env
+
+dist/
+node_modules/

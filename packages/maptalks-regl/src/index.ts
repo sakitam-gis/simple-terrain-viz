@@ -470,12 +470,7 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
 
           viewport: (_, { canvasSize: [width, height] }) => ({ width, height }),
 
-          depth: {
-            enable: true,
-            mask: false,
-            func: 'less',
-            // range: [0, 1]
-          },
+          depth: { enable: false },
 
           blend: {
             enable: true,

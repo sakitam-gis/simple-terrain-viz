@@ -1,10 +1,10 @@
 // bili.config.ts
 import { Config } from 'bili'
 import { RollupConfig } from 'bili/types/types';
-import fs from 'fs-extra'
-import path from 'path'
+import * as fs from 'fs-extra'
+import { resolve } from 'path'
 
-const json = fs.readJsonSync(path.resolve(`./package.json`));
+const json = fs.readJsonSync(resolve(__dirname, `./package.json`));
 
 const generateBanner = (json: any): string => {
   const time = new Date();
@@ -17,14 +17,15 @@ const generateBanner = (json: any): string => {
   return banner
 }
 
-const namePath = 'maptalks-deckgl';
+const namePath = 'terrain-layer';
 
 const config: Config = {
   babel: undefined,
   input: 'src/index.ts',
   output: {
     format: ['cjs', 'umd', 'umd-min', 'esm'],
-    moduleName: 'DeckGLLayer',
+    moduleName: json.namespace,
+    sourceMap: false,
   },
   extendConfig(config, { format }) {
     if (format.startsWith('umd')) {
@@ -36,17 +37,25 @@ const config: Config = {
     if (format === 'cjs') {
       config.output.fileName = `${namePath}.cjs.js`
     }
+
+    config.externals = config.externals.filter(item => item !== 'gl-matrix'); // 默认 bili 会排除外部依赖
+
     return config
   },
   extendRollupConfig: (config: RollupConfig) => {
     if (config.outputConfig.format === 'umd') {
       /** Disable warning for default imports */
       config.outputConfig.exports = 'named'
+      // it seems the umd bundle can not satisfies our demand
+      config.outputConfig.footer = `if(typeof window !== "undefined" && window.${json.namespace}) {
+  window.${json.namespace} = window.${json.namespace}.default;
+}`;
     }
     return config
   },
   banner: generateBanner(json),
   plugins: {
+    glslify: {},
     'typescript2': {
       clean: true,
       check: false,
@@ -54,10 +63,12 @@ const config: Config = {
     }
   },
   globals: {
-    mapboxgl: 'mapbox-gl',
+    maptalks: 'maptalks',
+    regl: 'createREGL'
   },
   externals: [
-    'mapbox-gl'
+    'maptalks',
+    'regl'
   ]
 }
 

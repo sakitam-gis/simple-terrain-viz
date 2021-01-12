@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <title>mapbox-regl-tile-layer</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link href="https://cdn.jsdelivr.net/npm/@sakitam-gis/mapbox-gl@1.20.0/dist/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://cdn.jsdelivr.net/npm/dat.gui/build/dat.gui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sakitam-gis/mapbox-gl@1.20.0/dist/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/regl@2.0.1/dist/regl.js"></script>
+<script src="../dist/terrain-layer.js"></script>
+<script>
+  mapboxgl.accessToken = "pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg"; // eslint-disable-line
+
+  class App {
+    start() {
+      const bearing = 140;
+      const pitch = 60;
+      this.map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v10',
+        zoom: 11.5,
+        center: [-122.18, 46.24],
+        pitch,
+        bearing,
+        // zoom: 24,
+        maxZoom: 24,
+        antialias: true
+      });
+
+      this.map.on('load', () => {
+        const options = {
+          opacity: 1,
+          extrudeScale: 1,
+          widthSegments: 128,
+          heightSegments: 128,
+        };
+        const layer = new TerrainLayer(
+          'layer',
+          {
+            type: 'raster',
+            tileSize: 256,
+            terrainTiles: [
+              // `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${mapboxgl.accessToken}`
+              `https://a.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${mapboxgl.accessToken}`,
+              `https://b.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${mapboxgl.accessToken}`,
+              `https://c.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${mapboxgl.accessToken}`,
+              `https://d.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${mapboxgl.accessToken}`
+            ],
+            realTiles: [
+              `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.webp?sku=101XzrMiclXn4&access_token=${mapboxgl.accessToken}`
+            ],
+            attribution: ''
+          },
+          options,
+        );
+        this.map.addLayer(layer);
+
+        const gui = new dat.GUI();
+        gui.add(options, 'opacity', 0, 1).onChange(function () {
+          layer.setOptions(options);
+        });
+
+        gui.add(options, 'extrudeScale', 0, 10).onChange(function () {
+          layer.setOptions(options);
+        });
+
+        gui.add(options, 'widthSegments', 1, 256).onChange(function () {
+          layer.setOptions(options);
+        });
+
+        gui.add(options, 'heightSegments', 1, 256).onChange(function () {
+          layer.setOptions(options);
+        });
+      });
+
+      window.map = this.map;
+    }
+
+    delete() {
+      this.map.remove();
+    }
+  }
+
+  new App().start();
+</script>
+</body>
+</html>

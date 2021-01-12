@@ -6,16 +6,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/maptalks-deckgl.js",
-  "module": "dist/maptalks-deckgl.esm.js",
-  "unpkg": "dist/maptalks-deckgl.js",
-  "commonjs": "dist/maptalks-deckgl.cjs.js",
+  "main": "dist/terrain-layer.js",
+  "module": "dist/terrain-layer.esm.js",
+  "unpkg": "dist/terrain-layer.js",
+  "commonjs": "dist/terrain-layer.cjs.js",
   "typings": "dist/types/index.d.ts",
-  "namespace": "DeckGLLayer",
+  "namespace": "TerrainLayer",
   "scripts": {
     "tsc": "tsc --project tsconfig.json --declaration --declarationDir dist/types",
-    "dev": "cross-env yarn-or-npm bili --watch --env.NODE_ENV production",
-    "build": "cross-env yarn-or-npm bili --env.NODE_ENV production",
+    "dev": "cross-env yarn bili --watch --env.NODE_ENV production",
+    "build": "cross-env yarn bili --env.NODE_ENV production",
     "docs": "typedoc --out docs/api --theme minimal --mode file",
     "test": "jest"
   },
@@ -32,7 +32,11 @@
     "url": "git@github.com:sakitam-gis/simple-terrain-viz.git",
     "directory": "packages/mapbox-regl"
   },
+  "dependencies": {
+    "regl": "^2.0.1"
+  },
   "devDependencies": {
-    "@sakitam-gis/mapbox-gl": "^1.14.0-dev"
+    "@sakitam-gis/mapbox-gl": "^1.20.0",
+    "bili": "^5.0.5"
   }
 }

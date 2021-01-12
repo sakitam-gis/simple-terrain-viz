@@ -244,8 +244,9 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
       terrainImage.width = tileSize['width'];
       terrainImage.height = tileSize['height'];
       terrainImage.onload = () => {
+        tile.displayImage = displayImage;
         // @ts-ignore
-        displayImage.onload = this.onTileLoad.bind(this, terrainImage, tile, displayImage);
+        displayImage.onload = this.onTileLoad.bind(this, terrainImage, tile);
         if (urls) {
           displayImage.src = urls;
         }
@@ -258,43 +259,6 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
 
     this.loadTileImage(terrainImage, tile['url']);
     return terrainImage;
-  }
-
-  private onTileLoad(tileImage: HTMLImageElement, tileInfo: any, displayImage: HTMLImageElement) {
-    if (!this.layer) {
-      return;
-    }
-    const id = tileInfo['id'];
-    // @ts-ignore
-    if (!this.tilesInView) {
-      // removed
-      return;
-    }
-
-    tileInfo.displayImage = displayImage;
-
-    const e = { tile : tileInfo, tileImage: tileImage };
-    /**
-     * tileload event, fired when tile is loaded.
-     *
-     * @event TileLayer#tileload
-     * @type {Object}
-     * @property {String} type - tileload
-     * @property {TileLayer} target - tile layer
-     * @property {Object} tileInfo - tile info
-     * @property {Image} tileImage - tile image
-     */
-    // @ts-ignore
-    this.layer.fire('tileload', e);
-    // let user update tileImage in listener if needed
-    tileImage = e.tileImage;
-    // @ts-ignore
-    tileImage.loadTime = Date.now();
-    // @ts-ignore
-    delete this.tilesLoading[id];
-    // @ts-ignore
-    this._addTileToCache(tileInfo, tileImage);
-    this.setToRedraw();
   }
 
   public drawTile(tileInfo: any, tileImage: HTMLImageElement) {

@@ -163,10 +163,10 @@ export default class TerrainLayer {
       },
 
       depth: {
-        enable: false,
-        mask: false,
+        enable: true,
+        mask: true,
         func: 'less',
-        // range: [0, 1]
+        range: [0, 1]
       },
 
       blend: {

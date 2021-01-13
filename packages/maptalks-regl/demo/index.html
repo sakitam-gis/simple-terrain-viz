@@ -20,7 +20,7 @@
   class App {
     start() {
       const bearing = 0;
-      const pitch = 65;
+      const pitch = 60;
       this.map = new maptalks.Map('map', {
         zoom: 5,
         center: [107.95429931283752, 36.19684450648546],
@@ -47,12 +47,16 @@
         'layer',
         {
           tileSize: [256, 256],
-          urlTemplate: `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.webp?sku=101XzrMiclXn4&access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+          // urlTemplate: `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.webp?sku=101XzrMiclXn4&access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+          urlTemplate: `https://sakitam-fdd.cn/github/osm-proxy/mapbox-satellite/{z}/{x}/{y}`,
+          // terrainTiles: [
+          //   `https://a.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+          //   `https://b.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+          //   `https://c.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+          //   `https://d.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+          // ],
           terrainTiles: [
-            `https://a.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
-            `https://b.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
-            `https://c.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
-            `https://d.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+            `https://sakitam-fdd.cn/github/osm-proxy/mapbox-terrain/{z}/{x}/{y}`,
           ],
           attribution: '@mapbox-gl',
           ...options

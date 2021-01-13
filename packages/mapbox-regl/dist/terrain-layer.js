@@ -1,7 +1,7 @@
 /*!
  * author: sakitam-fdd <smilefdd@gmail.com>
  * mapbox-regl v1.0.0
- * build-time: 2021-1-11 17:33
+ * build-time: 2021-1-13 17:42
  * LICENSE: MIT
  * (c) 2020-2021 https://github.com/sakitam-gis/simple-terrain-viz
  */
@@ -143,9 +143,10 @@
             }
           },
           depth: {
-            enable: false,
-            mask: false,
-            func: 'less'
+            enable: true,
+            mask: true,
+            func: 'less',
+            range: [0, 1]
           },
           blend: {
             enable: false,

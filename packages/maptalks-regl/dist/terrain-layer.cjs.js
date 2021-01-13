@@ -486,7 +486,10 @@ function (_super) {
             };
           },
           depth: {
-            enable: false
+            enable: true,
+            mask: true,
+            func: 'less',
+            range: [0, 1]
           },
           // @link https://github.com/regl-project/regl/blob/master/API.md#stencil
           stencil: {

@@ -460,7 +460,12 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
 
           viewport: (_, { canvasSize: [width, height] }) => ({ width, height }),
 
-          depth: { enable: false },
+          depth: {
+            enable: true,
+            mask: true,
+            func: 'less',
+            range: [0, 1]
+          },
 
           // @link https://github.com/regl-project/regl/blob/master/API.md#stencil
           stencil: {

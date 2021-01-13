@@ -14,7 +14,7 @@ const _options = {
   renderer: 'gl',
   glOptions: {
     alpha: true,
-    depth: true,
+    depth: false,
     antialias: true,
     stencil: true
   },
@@ -30,14 +30,19 @@ export namespace DrawCommon {
     u_matrix: REGL.Mat4;
     u_image: REGL.Texture2D;
     u_tile: REGL.Texture2D;
+    u_tile_size: number;
+    u_hasTerrain: number;
     u_opacity: number;
     u_extrude_scale: number;
+    zoom: number;
     canvasSize: [number, number];
   }
   export interface Uniforms {
     u_matrix: REGL.Mat4;
     u_image: REGL.Texture2D;
     u_tile: REGL.Texture2D;
+    u_tile_size: number;
+    u_hasTerrain: number;
     u_opacity: number;
     u_extrude_scale: number;
   }
@@ -81,7 +86,7 @@ export interface IOptions {
   [key: string]: any;
   urlTemplate: string;
   subdomains: (string|number)[]
-  realTiles: string | string[];
+  terrainTiles: string | string[];
   doubleBuffer?: boolean;
   animation?: boolean;
   fps?: number;
@@ -146,6 +151,7 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
   private layer: TerrainLayer;
   private regl: REGL.Regl;
   private command: REGL.DrawCommand<REGL.DefaultContext, DrawCommon.Props>;
+  private _tileZoom: number;
 
   private isDrawable() {
     return true;
@@ -185,7 +191,7 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
       const y = iy * segment_height;
       for (let ix = 0; ix < gridX1; ix++) {
         const x = ix * segment_width;
-        vertices.push(startX + (x / width_half / 2) * width, startY - (y / height_half / 2) * height);
+        vertices.push(x / width_half / 2, -(y / height_half / 2));
         uvs.push(x / width_half / 2, y / height_half / 2);
       }
     }
@@ -227,38 +233,48 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
 
   private loadTile(tile: any) {
     const tileSize = this.layer.getTileSize();
-    const { realTiles, crossOrigin } = this.layer.options;
-
-    const terrainImage = new Image();
-    if (!realTiles) {
-      console.warn('必须指定真实渲染图层: options.realTiles');
+    const { terrainTiles, crossOrigin } = this.layer.options;
+    if (!terrainTiles) {
+      console.warn('必须指定真实渲染图层: options.terrainTiles');
+      return;
     } else {
-      const urls = getUrl(realTiles, {
+      const urls = getUrl(terrainTiles, {
         x: tile.x,
         y: tile.y,
         z: tile.z,
       });
+      const terrainImage = new Image();
 
       const displayImage = new Image();
+      // perf: 先去加载地图瓦片数据，默认渲染，再去加载地形数据进行贴图
 
-      terrainImage.width = tileSize['width'];
-      terrainImage.height = tileSize['height'];
-      terrainImage.onload = () => {
-        tile.displayImage = displayImage;
+      displayImage.width = tileSize['width'];
+      displayImage.height = tileSize['height'];
+      displayImage.onload = () => {
+        this.onTileLoad(displayImage, tile);
         // @ts-ignore
-        displayImage.onload = this.onTileLoad.bind(this, terrainImage, tile);
+        terrainImage.onload = () => {
+          tile.terrainImage = terrainImage;
+          this.onTileLoad(displayImage, tile);
+        };
+        // @ts-ignore
+        terrainImage.onerror = this.onTileError.bind(this, displayImage, tile); // 当地形数据加载失败后重新加载
+        terrainImage.crossOrigin = crossOrigin !== null ? crossOrigin : '*';
         if (urls) {
-          displayImage.src = urls;
+          terrainImage.src = urls;
         }
-        displayImage.crossOrigin = crossOrigin !== null ? crossOrigin : '*';
       };
+
+      // @ts-ignore
+      displayImage.onerror = this.onTileError.bind(this, displayImage, tile);
+
+      this.loadTileImage(displayImage, tile['url']);
+      return displayImage;
     }
+  }
 
-    // @ts-ignore
-    terrainImage.onerror = this.onTileError.bind(this, terrainImage, tile);
-
-    this.loadTileImage(terrainImage, tile['url']);
-    return terrainImage;
+  public onTileLoad(tileImage: HTMLImageElement, tileInfo: any) {
+    return super.onTileLoad(tileImage, tileInfo);
   }
 
   public drawTile(tileInfo: any, tileImage: HTMLImageElement) {
@@ -274,26 +290,47 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
       // this._bindGLBuffer(tileImage, w, h);
     }
 
-    if (!tileInfo.u_image) {
-      tileInfo.u_image = this.regl.texture({
+    // if (tileInfo.z <= this._tileZoom) {
+    //   console.log('show', tileInfo);
+    // } else {
+    //   console.log('hide', tileInfo);
+    // }
+
+    if (!tileInfo.u_tile) {
+      tileInfo.u_tile = this.regl.texture({
         data: tileImage,
         wrapS: 'clamp',
         wrapT: 'clamp',
         min: 'linear',
         mag: 'linear',
-        mipmap: false,
+        mipmap: true,
       });
     }
 
-    if (!tileInfo.u_tile) {
-      tileInfo.u_tile = this.regl.texture({
-        data: tileInfo.displayImage,
+    if (!tileInfo.hasTerrain && tileInfo.terrainImage) {
+      if (tileInfo.u_image) {
+        tileInfo.u_image.destroy();
+      }
+      tileInfo.u_image = this.regl.texture({
+        data: tileInfo.terrainImage,
         wrapS: 'clamp',
         wrapT: 'clamp',
         min: 'linear',
         mag: 'linear',
-        mipmap: false,
+        mipmap: true,
       });
+      tileInfo.hasTerrain = true;
+    } else if (!tileInfo.hasTerrain && !tileInfo.terrainImage) {
+      // temp terrain
+      tileInfo.u_image = this.regl.texture({
+        width: w,
+        height: h,
+        wrapS: 'clamp',
+        wrapT: 'clamp',
+        min: 'linear',
+        mag: 'linear',
+      });
+      tileInfo.hasTerrain = false;
     }
 
     const point = tileInfo.point;
@@ -307,9 +344,6 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
 
     const matrix = this.getMap().projViewMatrix;
 
-    if (!tileInfo.planeBuffer) {
-
-    }
     const data = this.getPlaneBuffer(
       tileInfo,
       0, 0, w, h,
@@ -321,27 +355,17 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
     mat4.translate(uMatrix, uMatrix, v3);
     mat4.scale(uMatrix, uMatrix, [scale, scale, 1]);
     mat4.multiply(uMatrix, matrix as any, uMatrix);
-
     this.command({
       // @ts-ignore
       u_matrix: uMatrix as REGL.Mat4,
       u_image: tileInfo.u_image,
       u_tile: tileInfo.u_tile,
+      u_tile_size: w,
+      u_hasTerrain: tileInfo.hasTerrain ? 1.0 : 0.0,
+      zoom: tileInfo.z,
       elements: data.elements,
       a_pos: data.position,
       a_texCoord: data.uvs,
-      // a_pos: [
-      //   0, 0,
-      //   0, -256,
-      //   256, 0,
-      //   256, -256
-      // ],
-      // a_texCoord: [
-      //   0.0, 0.0,
-      //   0.0, 1.0,
-      //   1.0, 0.0,
-      //   1.0, 1.0
-      // ],
       u_opacity: opacity !== undefined ? opacity : 1,
       u_extrude_scale: extrudeScale !== undefined ? extrudeScale : 1,
       canvasSize: [this.gl.canvas.width, this.gl.canvas.height]
@@ -428,13 +452,36 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
             u_matrix: (_, { u_matrix }) => u_matrix,
             u_image: (_, { u_image }) => u_image,
             u_tile: (_, { u_tile }) => u_tile,
+            u_tile_size: (_, { u_tile_size }) => u_tile_size,
             u_opacity: (_, { u_opacity }) => u_opacity,
             u_extrude_scale: (_, { u_extrude_scale }) => u_extrude_scale,
+            u_hasTerrain: (_, { u_hasTerrain }) => u_hasTerrain,
           },
 
           viewport: (_, { canvasSize: [width, height] }) => ({ width, height }),
 
           depth: { enable: false },
+
+          // @link https://github.com/regl-project/regl/blob/master/API.md#stencil
+          stencil: {
+            enable: true,
+            func: {
+              cmp: '<=',
+              // @ts-ignore
+              ref: (_: REGL.DefaultContext, { zoom }) => zoom,
+              mask: 0xff
+            },
+            // opFront: {
+            //   fail: 'keep',
+            //   zfail: 'keep',
+            //   zpass: 'replace'
+            // },
+            // opBack: {
+            //   fail: 'keep',
+            //   zfail: 'keep',
+            //   zpass: 'replace'
+            // }
+          },
 
           blend: {
             enable: true,
@@ -482,7 +529,8 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
     if (this.regl) {
       this.regl.clear({
         color: [0, 0, 0, 0],
-        depth: 1
+        depth: 1,
+        stencil: this._tileZoom
       })
     }
   }

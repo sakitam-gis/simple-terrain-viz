@@ -8,14 +8,19 @@ export declare namespace DrawCommon {
         u_matrix: REGL.Mat4;
         u_image: REGL.Texture2D;
         u_tile: REGL.Texture2D;
+        u_tile_size: number;
+        u_hasTerrain: number;
         u_opacity: number;
         u_extrude_scale: number;
+        zoom: number;
         canvasSize: [number, number];
     }
     interface Uniforms {
         u_matrix: REGL.Mat4;
         u_image: REGL.Texture2D;
         u_tile: REGL.Texture2D;
+        u_tile_size: number;
+        u_hasTerrain: number;
         u_opacity: number;
         u_extrude_scale: number;
     }
@@ -53,7 +58,7 @@ export interface IOptions {
     [key: string]: any;
     urlTemplate: string;
     subdomains: (string | number)[];
-    realTiles: string | string[];
+    terrainTiles: string | string[];
     doubleBuffer?: boolean;
     animation?: boolean;
     fps?: number;
@@ -93,10 +98,12 @@ export declare class Renderer extends renderer.TileLayerCanvasRenderer implement
     private layer;
     private regl;
     private command;
+    private _tileZoom;
     private isDrawable;
     private _drawTiles;
     private getPlaneBuffer;
     private loadTile;
+    onTileLoad(tileImage: HTMLImageElement, tileInfo: any): any;
     drawTile(tileInfo: any, tileImage: HTMLImageElement): void;
     private loadTileImage;
     private getCanvasImage;

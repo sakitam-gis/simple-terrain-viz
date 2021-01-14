@@ -1,7 +1,7 @@
 /*!
  * author: sakitam-fdd <smilefdd@gmail.com>
- * maptalks-regl v1.0.0
- * build-time: 2021-1-14 15:33
+ * maptalks-regl-with-loaders.gl v1.0.0
+ * build-time: 2021-1-14 19:24
  * LICENSE: MIT
  * (c) 2020-2021 https://github.com/sakitam-gis/simple-terrain-viz
  */
@@ -18,7 +18,7 @@ function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'defau
 
 var REGL__default = /*#__PURE__*/_interopDefaultLegacy(REGL);
 
-var vs = "#define GLSLIFY 1\nattribute vec2 a_pos;attribute vec2 a_texCoord;uniform mat4 u_matrix;uniform float u_tile_size;uniform sampler2D u_image;uniform float u_extrude_scale;uniform float u_hasTerrain;varying vec2 v_texCoord;varying float v_height;void main(){v_texCoord=a_texCoord;if(u_hasTerrain>0.0){vec3 rgb=texture2D(u_image,v_texCoord).rgb;float height=-10000.0+((rgb.r*255.0*256.0*256.0+rgb.g*255.0*256.0+rgb.b*255.0)*0.1);v_height=height;gl_Position=u_matrix*vec4(a_pos.xy*u_tile_size,height*u_extrude_scale,1.0);}else{gl_Position=u_matrix*vec4(a_pos.xy*u_tile_size,0.0,1.0);}}"; // eslint-disable-line
+var vs = "#define GLSLIFY 1\nattribute vec3 a_pos;attribute vec2 a_texCoord;uniform mat4 u_matrix;uniform float u_tile_size;uniform float u_extrude_scale;varying vec2 v_texCoord;varying float v_height;void main(){v_texCoord=a_texCoord;v_height=a_pos.z;gl_Position=u_matrix*vec4(a_pos.x*u_tile_size,(a_pos.y-1.0)*u_tile_size,a_pos.z*u_extrude_scale,1.0);}"; // eslint-disable-line
 
 var fs = "precision mediump float;\n#define GLSLIFY 1\nvarying vec2 v_texCoord;varying float v_height;uniform sampler2D u_tile;uniform float u_opacity;void main(){vec4 color=texture2D(u_tile,v_texCoord);gl_FragColor=vec4(floor(255.0*color*u_opacity)/255.0);}"; // eslint-disable-line
 
@@ -85,6 +85,13 @@ function getUrl(template, properties) {
   return template.replace('{x}', String(x)).replace('{y}', String(y)).replace('{z}', String(z)).replace('{-y}', String(Math.pow(2, z) - y - 1));
 }
 
+registerLoaders([// jsonLoader,
+[// @ts-ignore
+ImageLoader, {
+  imagebitmap: {
+    premultiplyAlpha: 'none'
+  }
+}]]);
 var _options = {
   registerEvents: true,
   renderer: 'gl',
@@ -95,7 +102,15 @@ var _options = {
     stencil: true
   },
   forceRenderOnMoving: true,
-  forceRenderOnZooming: true
+  forceRenderOnZooming: true,
+  elevationDecoder: {
+    rScaler: 6553.6,
+    gScaler: 25.6,
+    bScaler: 0.1,
+    offset: -10000
+  },
+  meshMaxError: 4,
+  workerUrl: null
 };
 
 var TerrainLayer =
@@ -153,120 +168,75 @@ function (_super) {
     this.regl && this.regl._refresh();
   };
 
-  Renderer.prototype.getPlaneBuffer = function (tile, startX, startY, width, height, widthSegments, heightSegments) {
-    if (tile.planeBuffer && tile.widthSegments === widthSegments && tile.heightSegments === heightSegments) {
-      return tile.planeBuffer;
-    }
-
-    tile.widthSegments = widthSegments;
-    tile.heightSegments = heightSegments;
-    var width_half = width / 2;
-    var height_half = height / 2;
-    var gridX = Math.floor(widthSegments);
-    var gridY = Math.floor(heightSegments);
-    var gridX1 = gridX + 1;
-    var gridY1 = gridY + 1;
-    var segment_width = width / gridX;
-    var segment_height = height / gridY;
-    var indices = [];
-    var vertices = [];
-    var uvs = [];
-
-    for (var iy = 0; iy < gridY1; iy++) {
-      var y = iy * segment_height;
-
-      for (var ix = 0; ix < gridX1; ix++) {
-        var x = ix * segment_width;
-        vertices.push(x / width_half / 2, -(y / height_half / 2));
-        uvs.push(x / width_half / 2, y / height_half / 2);
-      }
-    }
-
-    for (var iy = 0; iy < gridY; iy++) {
-      for (var ix = 0; ix < gridX; ix++) {
-        var a = ix + gridX1 * iy;
-        var b = ix + gridX1 * (iy + 1);
-        var c = ix + 1 + gridX1 * (iy + 1);
-        var d = ix + 1 + gridX1 * iy;
-        indices.push(a, b, d);
-        indices.push(b, c, d);
-      }
-    }
-
-    tile.planeBuffer = {
-      uvs: uvs,
-      vertices: vertices,
-      indices: indices,
-      elements: this.regl.elements({
-        data: indices,
-        primitive: 'triangles',
-        // primitive: 'line strip',
-        type: 'uint32',
-        count: indices.length
-      }),
-      position: {
-        buffer: this.regl.buffer({
-          data: vertices,
-          type: 'float'
-        }),
-        size: 2
-      }
-    };
-    return tile.planeBuffer;
-  };
-
   Renderer.prototype.loadTile = function (tile) {
     var _this = this;
 
-    var tileSize = this.layer.getTileSize();
     var _a = this.layer.options,
         terrainTiles = _a.terrainTiles,
-        crossOrigin = _a.crossOrigin;
+        elevationDecoder = _a.elevationDecoder,
+        meshMaxError = _a.meshMaxError,
+        workerUrl = _a.workerUrl;
 
     if (!terrainTiles) {
       console.warn('必须指定真实渲染图层: options.terrainTiles');
-      return;
+      return {};
     } else {
-      var urls_1 = getUrl(terrainTiles, {
+      var urls = getUrl(terrainTiles, {
         x: tile.x,
         y: tile.y,
         z: tile.z
       });
-      var terrainImage_1 = new Image();
-      var displayImage_1 = new Image(); // perf: 先去加载地图瓦片数据，默认渲染，再去加载地形数据进行贴图
+      Promise.all([this.loadTerrain({
+        elevationData: urls,
+        bounds: [0, 0, 1, 1],
+        elevationDecoder: elevationDecoder,
+        meshMaxError: meshMaxError,
+        workerUrl: workerUrl
+      }), // @ts-ignore
+      load(tile['url'], [ImageLoader])]).then(function (_a) {
+        var terrain = _a[0],
+            image = _a[1];
+        tile.terrainData = terrain;
 
-      displayImage_1.width = tileSize['width'];
-      displayImage_1.height = tileSize['height'];
+        _this.onTileLoad(image, tile);
+      })["catch"](function (error) {
+        console.error(error); // @ts-ignore
 
-      displayImage_1.onload = function () {
-        _this.onTileLoad(displayImage_1, tile); // @ts-ignore
-
-
-        terrainImage_1.onload = function () {
-          tile.terrainImage = terrainImage_1;
-
-          _this.onTileLoad(displayImage_1, tile);
-        }; // @ts-ignore
-
-
-        terrainImage_1.onerror = _this.onTileError.bind(_this, displayImage_1, tile); // 当地形数据加载失败后重新加载
-
-        terrainImage_1.crossOrigin = crossOrigin !== null ? crossOrigin : '*';
-
-        if (urls_1) {
-          terrainImage_1.src = urls_1;
-        }
-      }; // @ts-ignore
-
-
-      displayImage_1.onerror = this.onTileError.bind(this, displayImage_1, tile);
-      this.loadTileImage(displayImage_1, tile['url']);
-      return displayImage_1;
+        _this.onTileError('', tile);
+      });
+      return {};
     }
   };
 
   Renderer.prototype.onTileLoad = function (tileImage, tileInfo) {
     return _super.prototype.onTileLoad.call(this, tileImage, tileInfo);
+  };
+
+  Renderer.prototype.loadTerrain = function (_a) {
+    var elevationData = _a.elevationData,
+        bounds = _a.bounds,
+        elevationDecoder = _a.elevationDecoder,
+        meshMaxError = _a.meshMaxError,
+        workerUrl = _a.workerUrl;
+
+    if (!elevationData) {
+      return null;
+    }
+
+    var options = {
+      terrain: {
+        bounds: bounds,
+        meshMaxError: meshMaxError,
+        elevationDecoder: elevationDecoder
+      }
+    };
+
+    if (workerUrl !== null) {
+      options.terrain.workerUrl = workerUrl;
+    } // @ts-ignore
+
+
+    return load(elevationData, TerrainLoader, options);
   };
 
   Renderer.prototype.drawTile = function (tileInfo, tileImage) {
@@ -298,33 +268,6 @@ function (_super) {
       });
     }
 
-    if (!tileInfo.hasTerrain && tileInfo.terrainImage) {
-      if (tileInfo.u_image) {
-        tileInfo.u_image.destroy();
-      }
-
-      tileInfo.u_image = this.regl.texture({
-        data: tileInfo.terrainImage,
-        wrapS: 'clamp',
-        wrapT: 'clamp',
-        min: 'linear',
-        mag: 'linear',
-        mipmap: true
-      });
-      tileInfo.hasTerrain = true;
-    } else if (!tileInfo.hasTerrain && !tileInfo.terrainImage) {
-      // temp terrain
-      tileInfo.u_image = this.regl.texture({
-        width: w,
-        height: h,
-        wrapS: 'clamp',
-        wrapT: 'clamp',
-        min: 'linear',
-        mag: 'linear'
-      });
-      tileInfo.hasTerrain = false;
-    }
-
     var point = tileInfo.point;
     var x = point.x * scale;
     var y = point.y * scale;
@@ -332,13 +275,36 @@ function (_super) {
     v3[1] = y || 0;
     var _a = this.layer.options,
         extrudeScale = _a.extrudeScale,
-        widthSegments = _a.widthSegments,
-        heightSegments = _a.heightSegments,
         opacity = _a.opacity; // @ts-ignore
 
     var lyOpacity = this.getTileOpacity(tileImage);
     var matrix = this.getMap().projViewMatrix;
-    var data = this.getPlaneBuffer(tileInfo, 0, 0, w, h, widthSegments !== undefined ? widthSegments : w / 2, heightSegments !== undefined ? heightSegments : h / 2);
+
+    if (!tileInfo.planeBuffer) {
+      var _b = tileInfo.terrainData,
+          attributes = _b.attributes,
+          indices = _b.indices;
+      tileInfo.planeBuffer = {
+        elements: this.regl.elements({
+          data: indices.value,
+          primitive: 'triangles',
+          // primitive: 'line strip',
+          type: 'uint32'
+        }),
+        position: {
+          buffer: this.regl.buffer({
+            data: attributes.POSITION.value,
+            type: 'float'
+          }),
+          size: attributes.POSITION.size
+        },
+        uvs: {
+          buffer: this.regl.buffer(attributes.TEXCOORD_0.value),
+          size: attributes.TEXCOORD_0.size
+        }
+      };
+    }
+
     var uMatrix = glMatrix.mat4.identity(arr16);
     glMatrix.mat4.translate(uMatrix, uMatrix, v3);
     glMatrix.mat4.scale(uMatrix, uMatrix, [scale, scale, 1]);
@@ -346,14 +312,12 @@ function (_super) {
     this.command({
       // @ts-ignore
       u_matrix: uMatrix,
-      u_image: tileInfo.u_image,
       u_tile: tileInfo.u_tile,
       u_tile_size: w,
-      u_hasTerrain: tileInfo.hasTerrain ? 1.0 : 0.0,
       zoom: tileInfo.z,
-      elements: data.elements,
-      a_pos: data.position,
-      a_texCoord: data.uvs,
+      elements: tileInfo.planeBuffer.elements,
+      a_pos: tileInfo.planeBuffer.position,
+      a_texCoord: tileInfo.planeBuffer.uvs,
       u_opacity: opacity !== undefined ? opacity : 1,
       u_extrude_scale: extrudeScale !== undefined ? extrudeScale : 1,
       canvasSize: [this.gl.canvas.width, this.gl.canvas.height]
@@ -364,14 +328,6 @@ function (_super) {
     } else {
       this.setCanvasUpdated();
     }
-  };
-
-  Renderer.prototype.loadTileImage = function (tileImage, url) {
-    //image must set cors in webgl
-    var crossOrigin = this.layer.options['crossOrigin'];
-    tileImage.crossOrigin = crossOrigin !== null ? crossOrigin : '';
-    tileImage.src = url;
-    return;
   };
 
   Renderer.prototype.getCanvasImage = function () {
@@ -451,10 +407,6 @@ function (_super) {
               var u_matrix = _a.u_matrix;
               return u_matrix;
             },
-            u_image: function u_image(_, _a) {
-              var u_image = _a.u_image;
-              return u_image;
-            },
             u_tile: function u_tile(_, _a) {
               var u_tile = _a.u_tile;
               return u_tile;
@@ -470,10 +422,6 @@ function (_super) {
             u_extrude_scale: function u_extrude_scale(_, _a) {
               var u_extrude_scale = _a.u_extrude_scale;
               return u_extrude_scale;
-            },
-            u_hasTerrain: function u_hasTerrain(_, _a) {
-              var u_hasTerrain = _a.u_hasTerrain;
-              return u_hasTerrain;
             }
           },
           viewport: function viewport(_, _a) {
@@ -561,6 +509,42 @@ function (_super) {
         stencil: this._tileZoom
       });
     }
+  };
+
+  Renderer.prototype.clear = function () {
+    // @ts-ignore
+    this._retireTiles(true); // @ts-ignore
+
+
+    var keys = this.tileCache.keys();
+    var i = 0;
+    var len = keys.length;
+
+    for (; i < len; i++) {
+      // @ts-ignore
+      var item = this.tileCache.get(keys[i]);
+
+      if (item.info) {
+        if (item.info.u_tile) {
+          item.info.u_tile.destroy();
+        }
+
+        if (item.info.planeBuffer) {
+          item.info.planeBuffer.elements.destroy();
+          item.info.planeBuffer.position.buffer.destroy();
+          item.info.planeBuffer.uvs.buffer.destroy();
+        }
+      }
+    } // @ts-ignore
+
+
+    this.tileCache.reset();
+    this.tilesInView = {};
+    this.tilesLoading = {};
+    this._parentTiles = [];
+    this._childTiles = [];
+
+    _super.prototype.clear.call(this);
   };
 
   Renderer.prototype.getMap = function () {

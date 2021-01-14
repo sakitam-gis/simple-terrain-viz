@@ -1,7 +1,7 @@
 /*!
  * author: sakitam-fdd <smilefdd@gmail.com>
  * maptalks-regl v1.0.0
- * build-time: 2021-1-13 14:3
+ * build-time: 2021-1-14 15:33
  * LICENSE: MIT
  * (c) 2020-2021 https://github.com/sakitam-gis/simple-terrain-viz
  */

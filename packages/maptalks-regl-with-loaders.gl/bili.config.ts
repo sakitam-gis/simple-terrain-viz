@@ -59,6 +59,7 @@ const config: Config = {
   },
   banner: generateBanner(json),
   plugins: {
+    babel: false,
     glslify: {},
     'typescript2': {
       clean: true,

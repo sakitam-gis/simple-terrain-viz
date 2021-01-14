@@ -13,6 +13,7 @@
     "regl": "^2.0.1"
   },
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.12.10",
     "@babel/preset-typescript": "^7.7.4",
     "@babel/types": "^7.7.4",
     "@commitlint/cli": "^9.1.2",

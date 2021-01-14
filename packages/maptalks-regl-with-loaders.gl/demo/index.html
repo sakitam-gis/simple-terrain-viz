@@ -15,9 +15,10 @@
 <script src="https://cdn.jsdelivr.net/npm/dat.gui/build/dat.gui.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/regl@2.0.1/dist/regl.js"></script>
-<script src="https://unpkg.com/@loaders.gl/core/dist/dist.js"></script>
-<script src="https://unpkg.com/@loaders.gl/images/dist/dist.js"></script>
-<script src="https://unpkg.com/@loaders.gl/terrain/dist/dist.js"></script>
+<script src="https://bundle.run/buffer@6.0.3"></script>
+<script>
+  window.Buffer = buffer.Buffer;
+</script>
 <script src="../dist/terrain-layer.js"></script>
 <script>
   class App {
@@ -49,8 +50,8 @@
         'layer',
         {
           tileSize: [256, 256],
-          // urlTemplate: `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.webp?sku=101XzrMiclXn4&access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
-          urlTemplate: `http://localhost:3333/mapbox-satellite/{z}/{x}/{y}`,
+          urlTemplate: `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.webp?sku=101XzrMiclXn4&access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+          // urlTemplate: `http://localhost:3333/mapbox-satellite/{z}/{x}/{y}`,
           // terrainTiles: [
           //   `https://a.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
           //   `https://b.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
@@ -58,8 +59,8 @@
           //   `https://d.tiles.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
           // ],
           terrainTiles: [
-            // `https://sakitam-fdd.cn/github/osm-proxy/mapbox-terrain/{z}/{x}/{y}`,
-            `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
+            `https://sakitam-fdd.cn/github/osm-proxy/mapbox-terrain/{z}/{x}/{y}`,
+            // `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic21pbGVmZGQiLCJhIjoiY2tnN2Iybm91MDIzajJ5bHM1N3o5YzgybiJ9.KI0dCXX1rAfcLO1iwGKwHg`,
             // `http://localhost:3333/mapbox-terrain/{z}/{x}/{y}`,
           ],
           attribution: '@mapbox-gl',

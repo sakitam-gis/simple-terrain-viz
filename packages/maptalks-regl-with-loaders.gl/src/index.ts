@@ -3,17 +3,16 @@ import REGL from 'regl';
 import { Canvas, renderer, TileLayer } from 'maptalks';
 
 import { mat4 } from 'gl-matrix';
-// import { load } from '@loaders.gl/core/dist/es5';
+import { load, registerLoaders } from '@loaders.gl/core/dist/es5';
 // @ts-ignore
-// import { TerrainLoader } from '@loaders.gl/terrain/dist/es5';
-// import { ImageLoader } from '@loaders.gl/images/dist/es5';
+import { TerrainLoader } from '@loaders.gl/terrain/dist/es5';
+import { ImageLoader } from '@loaders.gl/images/dist/es5';
 
 import vs from './shaders/draw.vert.glsl';
 import fs from './shaders/draw.frag.glsl';
 
 import {createContext, getDevicePixelRatio, getUrl} from './utils';
 
-// @ts-ignore
 registerLoaders([
   // jsonLoader,
   [

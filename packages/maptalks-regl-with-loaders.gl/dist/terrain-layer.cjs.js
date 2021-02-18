@@ -1,7 +1,7 @@
 /*!
  * author: sakitam-fdd <smilefdd@gmail.com>
  * maptalks-regl-with-loaders.gl v1.0.0
- * build-time: 2021-1-14 20:33
+ * build-time: 2021-2-18 15:18
  * LICENSE: MIT
  * (c) 2020-2021 https://github.com/sakitam-gis/simple-terrain-viz
  */
@@ -208,7 +208,7 @@ var Renderer = /** @class */ (function (_super) {
         }
         var scale = tileInfo._glScale = tileInfo._glScale || map.getGLScale(tileInfo.z);
         var w = tileInfo.size[0];
-        var h = tileInfo.size[1];
+        tileInfo.size[1];
         if (tileInfo.cache !== false) ;
         // if (tileInfo.z <= this._tileZoom) {
         //   console.log('show', tileInfo);
@@ -332,6 +332,7 @@ var Renderer = /** @class */ (function (_super) {
                         preserveDrawingBuffer: false,
                     }
                 });
+                var stencil_1 = false;
                 this.command = this.regl({
                     frag: fs,
                     vert: vs,
@@ -381,14 +382,29 @@ var Renderer = /** @class */ (function (_super) {
                     stencil: {
                         enable: true,
                         func: {
-                            cmp: '<=',
+                            cmp: stencil_1 ? '=' : '<=',
                             // @ts-ignore
                             ref: function (_, _a) {
-                                var zoom = _a.zoom;
-                                return zoom;
+                                var zoom = _a.zoom, stencilRef = _a.stencilRef;
+                                return stencil_1 ? stencilRef : zoom;
                             },
                             mask: 0xff
                         },
+                        op: {
+                            fail: 'keep',
+                            zfail: 'keep',
+                            zpass: 'replace'
+                        }
+                        // opFront: {
+                        //   fail: 'keep',
+                        //   zfail: 'keep',
+                        //   zpass: 'replace'
+                        // },
+                        // opBack: {
+                        //   fail: 'keep',
+                        //   zfail: 'keep',
+                        //   zpass: 'replace'
+                        // }
                     },
                     blend: {
                         enable: true,

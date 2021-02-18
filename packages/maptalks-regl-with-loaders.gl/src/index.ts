@@ -401,6 +401,8 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
           }
         });
 
+        const stencil = false;
+
         this.command = this.regl<DrawCommon.Uniforms, DrawCommon.Attributes, DrawCommon.Props>({
           frag: fs,
 
@@ -432,11 +434,16 @@ export class Renderer extends renderer.TileLayerCanvasRenderer implements IRende
           stencil: {
             enable: true,
             func: {
-              cmp: '<=',
+              cmp: stencil ? '=' : '<=',
               // @ts-ignore
-              ref: (_: REGL.DefaultContext, { zoom }) => zoom,
+              ref: (_: REGL.DefaultContext, { zoom, stencilRef }) => stencil ? stencilRef : zoom,
               mask: 0xff
             },
+            op: {
+              fail: 'keep',
+              zfail: 'keep',
+              zpass: 'replace'
+            }
             // opFront: {
             //   fail: 'keep',
             //   zfail: 'keep',

@@ -1,7 +1,7 @@
 /*!
  * author: sakitam-fdd <smilefdd@gmail.com>
  * maptalks-regl-with-loaders.gl v1.0.0
- * build-time: 2021-1-14 20:33
+ * build-time: 2021-2-18 15:18
  * LICENSE: MIT
  * (c) 2020-2021 https://github.com/sakitam-gis/simple-terrain-viz
  */
@@ -398,7 +398,7 @@
      * @function
      */
 
-    var forEach = function () {
+    (function () {
       var vec = create$1();
       return function (a, stride, offset, count, fn, arg) {
         var i, l;
@@ -429,7 +429,7 @@
 
         return a;
       };
-    }();
+    })();
 
     /**
      * 4 Dimensional Vector
@@ -492,7 +492,7 @@
      * @function
      */
 
-    var forEach$1 = function () {
+    (function () {
       var vec = create$2();
       return function (a, stride, offset, count, fn, arg) {
         var i, l;
@@ -525,7 +525,7 @@
 
         return a;
       };
-    }();
+    })();
 
     /**
      * Quaternion
@@ -690,7 +690,7 @@
      * @returns {quat} out
      */
 
-    var rotationTo = function () {
+    (function () {
       var tmpvec3 = create$1();
       var xUnitVec3 = fromValues(1, 0, 0);
       var yUnitVec3 = fromValues(0, 1, 0);
@@ -718,7 +718,7 @@
           return normalize$2(out, out);
         }
       };
-    }();
+    })();
     /**
      * Performs a spherical linear interpolation with two control points
      *
@@ -731,7 +731,7 @@
      * @returns {quat} out
      */
 
-    var sqlerp = function () {
+    (function () {
       var temp1 = create$3();
       var temp2 = create$3();
       return function (out, a, b, c, d, t) {
@@ -740,7 +740,7 @@
         slerp(out, temp1, temp2, 2 * t * (1 - t));
         return out;
       };
-    }();
+    })();
     /**
      * Sets the specified quaternion with values corresponding to the given
      * axes. Each axis is a vec3 and is expected to be unit length and
@@ -752,7 +752,7 @@
      * @returns {quat} out
      */
 
-    var setAxes = function () {
+    (function () {
       var matr = create();
       return function (out, view, right, up) {
         matr[0] = right[0];
@@ -766,7 +766,7 @@
         matr[8] = -view[2];
         return normalize$2(out, fromMat3(out, matr));
       };
-    }();
+    })();
 
     /**
      * 2 Dimensional Vector
@@ -802,7 +802,7 @@
      * @function
      */
 
-    var forEach$2 = function () {
+    (function () {
       var vec = create$4();
       return function (a, stride, offset, count, fn, arg) {
         var i, l;
@@ -831,7 +831,7 @@
 
         return a;
       };
-    }();
+    })();
 
     var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -1646,7 +1646,7 @@
       // as the regeneratorRuntime namespace. Otherwise create a new empty
       // object. Either way, the resulting object will be used to initialize
       // the regeneratorRuntime variable at the top of this file.
-       module.exports 
+      module.exports 
     ));
 
     try {
@@ -1745,7 +1745,7 @@
       return false;
     }
 
-    var VERSION =  "2.3.8" ;
+    var VERSION = "2.3.12" ;
     function validateLoaderVersion(loader) {
       var coreVersion = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : VERSION;
       assert(loader, 'no loader provided');
@@ -2671,7 +2671,7 @@
       return newModule.exports;
     }
 
-    var VERSION$1 =  "2.3.8" ;
+    var VERSION$1 = "2.3.12" ;
     var loadLibraryPromises = {};
     function loadLibrary(_x) {
       return _loadLibrary.apply(this, arguments);
@@ -3510,7 +3510,7 @@
       return _makeNumberedLineIterator.apply(this, arguments);
     }
 
-    function forEach$3(_x, _x2) {
+    function forEach(_x, _x2) {
       return _forEach.apply(this, arguments);
     }
 
@@ -4439,7 +4439,7 @@
         makeTextDecoderIterator: makeTextDecoderIterator,
         makeLineIterator: makeLineIterator,
         makeNumberedLineIterator: makeNumberedLineIterator,
-        forEach: forEach$3,
+        forEach: forEach,
         concatenateChunksAsync: concatenateChunksAsync,
         RequestScheduler: RequestScheduler,
         ChildProcessProxy: ChildProcessProxy,
@@ -4448,7 +4448,7 @@
         getZeroOffsetArrayBuffer: getZeroOffsetArrayBuffer
     });
 
-    var init = createCommonjsModule(function (module, exports) {
+    createCommonjsModule(function (module, exports) {
 
     Object.defineProperty(exports, "__esModule", {
       value: true
@@ -4457,7 +4457,7 @@
 
 
 
-    var version =  "2.3.8" ;
+    var version = "2.3.12" ;
     esm.global.loaders = Object.assign(esm.global.loaders || {}, {
       VERSION: version
     });
@@ -5582,6 +5582,7 @@
     function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
     var DEFAULT_LOADER_OPTIONS = {
+      baseUri: '',
       fetch: null,
       CDN: 'https://unpkg.com/@loaders.gl',
       worker: true,
@@ -5592,7 +5593,6 @@
     };
     var DEPRECATED_LOADER_OPTIONS = {
       dataType: '(no longer used)',
-      uri: 'baseUri',
       method: 'fetch.method',
       headers: 'fetch.headers',
       body: 'fetch.body',
@@ -5736,14 +5736,13 @@
 
       var mergedOptions = _objectSpread({}, loaderDefaultOptions);
 
-      addUrlOptions(mergedOptions, url);
-
       if (mergedOptions.log === null) {
         mergedOptions.log = new loggers.NullLog();
       }
 
       mergeNestedFields(mergedOptions, getGlobalLoaderOptions());
       mergeNestedFields(mergedOptions, options);
+      addUrlOptions(mergedOptions, url);
       return mergedOptions;
     }
 
@@ -5762,7 +5761,7 @@
     }
 
     function addUrlOptions(options, url) {
-      if (url && !('baseUri' in options)) {
+      if (url && !options.baseUri) {
         options.baseUri = url;
       }
     }
@@ -7034,7 +7033,7 @@
 
 
 
-    var VERSION =  "2.3.8" ;
+    var VERSION = "2.3.12" ;
 
     function canParseWithWorker(loader, data, options, context) {
       if (!esm._WorkerFarm.isSupported()) {
@@ -8622,7 +8621,7 @@
 
     var _asyncGeneratorDelegate2 = interopRequireDefault(asyncGeneratorDelegate);
 
-    var VERSION =  "2.3.8" ;
+    var VERSION = "2.3.12" ;
     var NullLoader = {
       id: 'image',
       name: 'Images',
@@ -9899,7 +9898,7 @@
 
     function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
-    var VERSION =  "2.3.8" ;
+    var VERSION = "2.3.12" ;
     var TerrainWorkerLoader = {
       id: 'terrain',
       name: 'Terrain',
@@ -10343,7 +10342,7 @@
 
     function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
-    var VERSION =  "2.3.8" ;
+    var VERSION = "2.3.12" ;
     var QuantizedMeshWorkerLoader = {
       id: 'quantized-mesh',
       name: 'Quantized Mesh',
@@ -10497,7 +10496,7 @@
 
     function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
-    var VERSION =  "2.3.8" ;
+    var VERSION = "2.3.12" ;
     var NPY_MAGIC_NUMBER = new Uint8Array([147, 78, 85, 77, 80, 89]);
     var NPYWorkerLoader = {
       id: 'npy',
@@ -11331,7 +11330,7 @@
 
 
 
-    var VERSION =  "2.3.8" ;
+    var VERSION = "2.3.12" ;
     var EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico', 'svg'];
     var MIME_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp', 'image/vnd.microsoft.icon', 'image/svg+xml'];
     var ImageLoader = {
@@ -12587,7 +12586,7 @@
             }
             var scale$1 = tileInfo._glScale = tileInfo._glScale || map.getGLScale(tileInfo.z);
             var w = tileInfo.size[0];
-            var h = tileInfo.size[1];
+            tileInfo.size[1];
             if (tileInfo.cache !== false) ;
             // if (tileInfo.z <= this._tileZoom) {
             //   console.log('show', tileInfo);
@@ -12711,6 +12710,7 @@
                             preserveDrawingBuffer: false,
                         }
                     });
+                    var stencil_1 = false;
                     this.command = this.regl({
                         frag: fs,
                         vert: vs,
@@ -12760,14 +12760,29 @@
                         stencil: {
                             enable: true,
                             func: {
-                                cmp: '<=',
+                                cmp: stencil_1 ? '=' : '<=',
                                 // @ts-ignore
                                 ref: function (_, _a) {
-                                    var zoom = _a.zoom;
-                                    return zoom;
+                                    var zoom = _a.zoom, stencilRef = _a.stencilRef;
+                                    return stencil_1 ? stencilRef : zoom;
                                 },
                                 mask: 0xff
                             },
+                            op: {
+                                fail: 'keep',
+                                zfail: 'keep',
+                                zpass: 'replace'
+                            }
+                            // opFront: {
+                            //   fail: 'keep',
+                            //   zfail: 'keep',
+                            //   zpass: 'replace'
+                            // },
+                            // opBack: {
+                            //   fail: 'keep',
+                            //   zfail: 'keep',
+                            //   zpass: 'replace'
+                            // }
                         },
                         blend: {
                             enable: true,
